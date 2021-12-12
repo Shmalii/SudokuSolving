@@ -8,6 +8,8 @@ version: 2.1
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   build-and-test:
+    docker: 
+      - image: circleci/python:3.9.0
     steps:
       - checkout
       - run:
