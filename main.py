@@ -1,7 +1,7 @@
 import json
 import copy
-import numpy as np
-import random
+import os
+
 
 def read_file(filename):
     with open(filename) as file:
@@ -29,7 +29,7 @@ def clear_by_row(data):
                         return
                 else:
                     data[row][column] = value[0]
-    return clear_sudoku_field(data)
+    return data
 
 
 def clear_by_column(data):
@@ -41,15 +41,13 @@ def clear_by_column(data):
         for row in range(9):
             if isinstance(data[row][column], list):
                 value = data[row][column]
-                if value == [5, 9] and column == 3 and row == 8:
-                    print(1)
                 if len(value) > 1:
                     data[row][column] = sorted(list(set(value) - element_to_delete))
                     if not data[row][column]:
                         return
                 else:
                     data[row][column] = value[0]
-    return clear_sudoku_field(data)
+    return data
 
 
 def clear_by_block(data):
@@ -71,7 +69,7 @@ def clear_by_block(data):
                                 return
                         else:
                             data[i][j] = value[0]
-    return clear_sudoku_field(data)
+    return data
 
 
 def fix_mark(data):
@@ -88,8 +86,6 @@ def fix_mark(data):
 
 
 def clear_sudoku_field(data):
-    if data is None:
-        print(2)
     for row in range(9):
         for column in range(9):
             value = data[row][column]
@@ -112,10 +108,11 @@ def clear_elements_cycle(data):
             data = function(copy.deepcopy(data))
             if not data:
                 return None
-            elif data_check == data:
-                return data
-            else:
-                data_check = copy.deepcopy(data)
+        data = clear_sudoku_field(data)
+        if data_check == data:
+            return data
+        else:
+            data_check = copy.deepcopy(data)
 
 
 def check_solved(data):
@@ -143,15 +140,28 @@ def fixing_recursion(data):
     return
 
 
-def main():
-    data = make_start_state(read_file("sudoku_01.json"))
+def solve(filename):
+    data = make_start_state(read_file(filename))
     data_copy = clear_elements_cycle(copy.deepcopy(data))
     while data_copy != data:
-        if check_solved(data_copy):
-            break
+        if not data_copy:
+            return None
+        elif check_solved(data_copy):
+            return data_copy
         data = copy.deepcopy(data_copy)
         data_copy = fixing_recursion(data_copy)
-    print_sudoku(data_copy)
+
+
+def main():
+    for i in range(1, 100):
+        file = f"sudoku_0{i}.json"
+        if os.path.isfile(file):
+            print(f"\n\nFile {file} exist")
+            solved = solve(file)
+            if solved:
+                print_sudoku(solved)
+            else:
+                print("This sudoku does no have solution")
 
 
 if __name__ == '__main__':
