@@ -120,6 +120,24 @@ def check_solved(data):
         for j in range(9):
             if not isinstance(data[i][j], int):
                 return False
+    for i in range(9):
+        if len(set(data[i])) != 9:
+            return False
+    for i in range(9):
+        column = set()
+        for j in range(9):
+            column.add(data[j][i])
+        if len(column) != 9:
+            return False
+    blocks = [(0, 3), (3, 6), (6, 9)]
+    for block_row in blocks:
+        for block_column in blocks:
+            block = set()
+            for i in range(*block_row):
+                for j in range(*block_column):
+                    block.add(data[i][j])
+            if len(block) != 9:
+                return False
     return True
 
 
