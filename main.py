@@ -4,8 +4,8 @@ import os
 
 
 def read_file(filename):
-    with open(filename) as file:
-        start_data = json.load(file)
+    with open(filename) as file_read:
+        start_data = json.load(file_read)
     return start_data
 
 
@@ -161,21 +161,23 @@ def fixing_recursion(data):
 def solve(filename):
     data = make_start_state(read_file(filename))
     data_copy = clear_elements_cycle(copy.deepcopy(data))
-    while data_copy != data:
+    while True:
         if not data_copy:
             return None
         elif check_solved(data_copy):
             return data_copy
         data = copy.deepcopy(data_copy)
         data_copy = fixing_recursion(data_copy)
+        if data == data_copy:
+            break
 
 
 def main():
     for i in range(1, 100):
-        file = f"sudoku_0{i}.json"
-        if os.path.isfile(file):
-            print(f"\n\nFile {file} exist")
-            solved = solve(file)
+        filename = f"sudoku_0{i}.json"
+        if os.path.isfile(filename):
+            print(f"\n\nFile {filename} exist")
+            solved = solve(filename)
             if solved:
                 print_sudoku(solved)
             else:
