@@ -1,6 +1,7 @@
 import json
 import copy
 import os
+from collections import Counter
 
 
 def read_file(filename):
@@ -19,16 +20,23 @@ def make_start_state(data):
 
 def clear_by_row(data):
     for row in range(9):
-        element_to_delete = {column for column in data[row] if isinstance(column, int) or len(column) == 1}
+        element_to_delete = set()
+        for elem in data[row]:
+            if isinstance(elem, int):
+                element_to_delete.add(elem)
+            elif len(elem) == 1:
+                element_to_delete.add(elem[0])
         for column in range(9):
             if isinstance(data[row][column], list):
                 value = data[row][column]
                 if len(value) > 1:
-                    data[row][column] = sorted(list(set(value) - element_to_delete))
-                    if not data[row][column]:
+                    sub = list(set(value) - element_to_delete)
+                    if not sub:
                         return
+                    data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
                 else:
                     data[row][column] = value[0]
+
     return data
 
 
@@ -38,13 +46,16 @@ def clear_by_column(data):
         for row in range(9):
             if isinstance(data[row][column], int):
                 element_to_delete.add(data[row][column])
+            elif len(data[row][column]) == 1:
+                element_to_delete.add(data[row][column][0])
         for row in range(9):
             if isinstance(data[row][column], list):
                 value = data[row][column]
                 if len(value) > 1:
-                    data[row][column] = sorted(list(set(value) - element_to_delete))
-                    if not data[row][column]:
+                    sub = list(set(value) - element_to_delete)
+                    if not sub:
                         return
+                    data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
                 else:
                     data[row][column] = value[0]
     return data
@@ -59,16 +70,21 @@ def clear_by_block(data):
                 for j in range(*block_column):
                     if isinstance(data[i][j], int):
                         element_to_delete.add(data[i][j])
+                    elif len(data[i][j]) == 1:
+                        element_to_delete.add(data[i][j][0])
             for i in range(*block_row):
                 for j in range(*block_column):
                     if isinstance(data[i][j], list):
                         value = data[i][j]
                         if len(value) > 1:
-                            data[i][j] = sorted(list(set(value) - element_to_delete))
-                            if not data[i][j]:
+                            sub = list(set(value) - element_to_delete)
+                            if not sub:
                                 return
+                            data[i][j] = sorted(sub) if len(sub) > 1 else sub[0]
+
                         else:
                             data[i][j] = value[0]
+
     return data
 
 
@@ -85,14 +101,6 @@ def fix_mark(data):
     return None, None, None
 
 
-def clear_sudoku_field(data):
-    for row in range(9):
-        for column in range(9):
-            value = data[row][column]
-            data[row][column] = value if isinstance(value, int) or len(value) > 1 else value[0]
-    return data
-
-
 def print_sudoku(data):
     for row in data:
         for elem in row:
@@ -106,13 +114,33 @@ def clear_elements_cycle(data):
     while True:
         for function in clear_functions:
             data = function(copy.deepcopy(data))
-            if not data:
+            if not data or not check_inconsistency(data):
                 return None
-        data = clear_sudoku_field(data)
         if data_check == data:
             return data
         else:
             data_check = copy.deepcopy(data)
+
+
+def check_inconsistency(data):
+    for i in range(9):
+        row = [elem for elem in data[i] if isinstance(elem, int)]
+        count = Counter(row).most_common(1)[0][1] if row else 0
+        if count > 1:
+            return
+    for j in range(9):
+        column = [data[i][j] for i in range(9) if isinstance(data[i][j], int)]
+        count = Counter(column).most_common(1)[0][1] if column else 0
+        if count > 1:
+            return
+    blocks = [(0, 3), (3, 6), (6, 9)]
+    for block_row in blocks:
+        for block_column in blocks:
+            block = [data[i][j] for i in range(*block_row) for j in range(*block_column) if isinstance(data[i][j], int)]
+            count = Counter(block).most_common(1)[0][1] if block else 0
+            if count > 1:
+                return
+    return True
 
 
 def check_solved(data):
@@ -123,19 +151,14 @@ def check_solved(data):
     for i in range(9):
         if len(set(data[i])) != 9:
             return False
-    for i in range(9):
-        column = set()
-        for j in range(9):
-            column.add(data[j][i])
+    for j in range(9):
+        column = {data[i][j] for i in range(9)}
         if len(column) != 9:
             return False
     blocks = [(0, 3), (3, 6), (6, 9)]
     for block_row in blocks:
         for block_column in blocks:
-            block = set()
-            for i in range(*block_row):
-                for j in range(*block_column):
-                    block.add(data[i][j])
+            block = {data[i][j] for i in range(*block_row) for j in range(*block_column)}
             if len(block) != 9:
                 return False
     return True
