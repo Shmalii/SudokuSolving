@@ -21,4 +21,4 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pytest test.py
+            pytest -o log_cli=true test.py
