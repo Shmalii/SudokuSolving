@@ -197,6 +197,7 @@ def fixing_recursion(data):
             return data_with_fixed
 
     if DeletedMark.del_index == (row, column):
+        print("Violation of invariance")
         return "exit"
     return
 
