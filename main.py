@@ -218,6 +218,8 @@ def solve(filename):
     while True:
         if not data_copy:
             return None
+        elif data_copy == 'exit':
+            return data_copy
         elif check_solved(data_copy):
             return data_copy
         data = copy.deepcopy(data_copy)
@@ -232,7 +234,9 @@ def main():
         if os.path.isfile(filename):
             print(f"\n\nFile {filename} exist")
             solved = solve(filename)
-            if solved:
+            if solved == "exit":
+                continue
+            elif solved:
                 print_sudoku(solved)
             else:
                 print("This sudoku does no have solution")
