@@ -2,6 +2,13 @@ import json
 import copy
 import os
 from collections import Counter
+from collections import namedtuple
+
+index = namedtuple('index', ('row', 'column'))
+
+
+class DeletedMark:
+    del_index = index(-1, -1)
 
 
 def read_file(filename):
@@ -19,6 +26,7 @@ def make_start_state(data):
 
 
 def clear_by_row(data):
+    global blya
     for row in range(9):
         element_to_delete = set()
         for elem in data[row]:
@@ -32,6 +40,7 @@ def clear_by_row(data):
                 if len(value) > 1:
                     sub = list(set(value) - element_to_delete)
                     if not sub:
+                        DeletedMark.del_index = index(row, column)
                         return
                     data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
                 else:
@@ -41,6 +50,7 @@ def clear_by_row(data):
 
 
 def clear_by_column(data):
+    global blya
     for column in range(9):
         element_to_delete = set()
         for row in range(9):
@@ -54,6 +64,7 @@ def clear_by_column(data):
                 if len(value) > 1:
                     sub = list(set(value) - element_to_delete)
                     if not sub:
+                        DeletedMark.del_index = index(row, column)
                         return
                     data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
                 else:
@@ -62,6 +73,7 @@ def clear_by_column(data):
 
 
 def clear_by_block(data):
+    global blya
     blocks = [(0, 3), (3, 6), (6, 9)]
     for block_row in blocks:
         for block_column in blocks:
@@ -79,6 +91,7 @@ def clear_by_block(data):
                         if len(value) > 1:
                             sub = list(set(value) - element_to_delete)
                             if not sub:
+                                DeletedMark.del_index = index(i, j)
                                 return
                             data[i][j] = sorted(sub) if len(sub) > 1 else sub[0]
 
@@ -114,7 +127,9 @@ def clear_elements_cycle(data):
     while True:
         for function in clear_functions:
             data = function(copy.deepcopy(data))
-            if not data or not check_inconsistency(data):
+            if not data:
+                return None
+            if not check_inconsistency(data):
                 return None
         if data_check == data:
             return data
@@ -165,20 +180,27 @@ def check_solved(data):
 
 
 def fixing_recursion(data):
-    if check_solved(data):
+    if data == "exit" or check_solved(data):
         return data
     row, column, values = fix_mark(data)
     print(f"Fixing object row: {row}, col: {column}, possible values: {values}")
     for value in values:
         data_with_fixed = copy.deepcopy(data)
-        data_with_fixed[row][column] = value
-        data_with_fixed = clear_elements_cycle(data_with_fixed)
         print(f"Try to fix {value}")
-        if data_with_fixed:
+        data_with_fixed[row][column] = [value]
+        data_with_fixed = clear_elements_cycle(data_with_fixed)
+        if data_with_fixed and not check_solved(data_with_fixed):
             data_with_fixed = fixing_recursion(data_with_fixed)
-        if data_with_fixed and check_solved(data_with_fixed):
+        if data_with_fixed and data_with_fixed != "exit" and check_solved(data_with_fixed):
             return data_with_fixed
+        if data_with_fixed == "exit" and DeletedMark.del_index != (row, column):
+            return data_with_fixed
+
+    if DeletedMark.del_index == (row, column):
+        return "exit"
     return
+
+
 
 
 def solve(filename):

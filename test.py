@@ -23,13 +23,9 @@ def test_check_solve(data):
     assert not check_solved(board_start_state), "Check solve function does not work correctly"
 
 
-@pytest.mark.parametrize('data, cleared_data', [(board_clear_field, board_solved)])
-def test_clear_field_function(data, cleared_data):
-    assert clear_sudoku_field(copy.deepcopy(data)) == cleared_data, "Clear field function does not work correctly"
-
-
 @pytest.mark.parametrize('data, expected_result', [(board_start_state, board_start_state_cleared_by_row)])
 def test_clear_by_row(data, expected_result):
+    print(clear_by_row(copy.deepcopy(data)))
     assert clear_by_row(copy.deepcopy(data)) == expected_result, "Clear by row function does not work correctly"
 
 
