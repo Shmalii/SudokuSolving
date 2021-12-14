@@ -11,6 +11,10 @@ class DeletedMark:
     del_index = index(-1, -1)
 
 
+class FixedMark:
+    fix_index = index(-1, -1)
+
+
 def read_file(filename):
     with open(filename) as file_read:
         start_data = json.load(file_read)
@@ -43,7 +47,7 @@ def clear_by_row(data):
                         DeletedMark.del_index = index(row, column)
                         return
                     data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
-                else:
+                elif FixedMark.fix_index != (row, column):
                     data[row][column] = value[0]
 
     return data
@@ -66,8 +70,8 @@ def clear_by_column(data):
                     if not sub:
                         DeletedMark.del_index = index(row, column)
                         return
-                    data[row][column] = sorted(sub) if len(sub) > 1 else sub[0]
-                else:
+                    data[row][column] = sorted(sub) if len(sub) > 1  else sub[0]
+                elif FixedMark.fix_index != (row, column):
                     data[row][column] = value[0]
     return data
 
@@ -95,7 +99,7 @@ def clear_by_block(data):
                                 return
                             data[i][j] = sorted(sub) if len(sub) > 1 else sub[0]
 
-                        else:
+                        elif FixedMark.fix_index != (i, j):
                             data[i][j] = value[0]
 
     return data
@@ -132,6 +136,9 @@ def clear_elements_cycle(data):
             if not check_inconsistency(data):
                 return None
         if data_check == data:
+            row = FixedMark.fix_index.row
+            column = FixedMark.fix_index.column
+            data[row][column] = data[row][column][0] if isinstance(data[row][column], list) else data[row][column]
             return data
         else:
             data_check = copy.deepcopy(data)
@@ -183,6 +190,7 @@ def fixing_recursion(data):
     if data == "exit" or check_solved(data):
         return data
     row, column, values = fix_mark(data)
+    FixedMark.fix_index = index(row, column)
     print(f"Fixing object row: {row}, col: {column}, possible values: {values}")
     for value in values:
         data_with_fixed = copy.deepcopy(data)
